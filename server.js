@@ -1,37 +1,36 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const authRoutes = require('./routes/auth');
 const employeeRoutes = require('./routes/employee');
-const path = require('path');
-const dotenv = require('dotenv');
+const helmet = require('helmet'); // For security
 
-// Initialize app
 const app = express();
-dotenv.config(); // Load environment variables from .env file
+require('dotenv').config();
 
-// Middleware
-app.use(express.json()); // Parse incoming requests with JSON payloads
+// Apply security headers
+app.use(helmet());
 
-// CORS setup
+// CORS configuration
 app.use(cors({
-    origin: ['https://papaya-praline-c53106.netlify.app', 'http://localhost:5000'] // Add your frontend URLs here
+  origin: ['http://localhost:5173', 'https://papaya-praline-c53106.netlify.app'],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  allowedHeaders: 'Content-Type, Authorization',
 }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve uploaded files
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log(err));
 
 // Routes
-app.use('/api/auth', authRoutes);         // Authentication routes
-app.use('/api/employees', employeeRoutes); // Employee routes
+app.use('/api/auth', authRoutes);
+app.use('/api/employees', employeeRoutes);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 6000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
