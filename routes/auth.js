@@ -5,12 +5,11 @@ const User = require('../models/User')
 const router = express.Router();
 
 // Register
-router.post('/api/auth/register', async (req, res) => {
-  const { name, email, password } = req.body;
 
+router.post('/register', async (req, res) => {
+  const { name, email, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = new User({ name, email, password: hashedPassword });
-
   try {
     await user.save();
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
