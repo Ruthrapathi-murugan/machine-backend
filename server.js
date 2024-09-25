@@ -12,6 +12,12 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // Serve uploaded files
 
+
+const cors = require('cors');
+app.use(cors({
+   origin: 'https://papaya-praline-c53106.netlify.app/' // replace with your frontend domain
+}));
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
