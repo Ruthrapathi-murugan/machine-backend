@@ -1,7 +1,6 @@
 const express = require('express');
 const multer = require('multer');
 const Employee = require('../models/Employee');
-const app = express();
 const router = express.Router();
 
 // Handle file uploads
@@ -15,7 +14,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-app.use('/uploads', express.static('uploads'));
+router.use('/uploads', express.static('uploads'));
 
 // POST /api/employees - Create new employee
 router.post('/', upload.single('image'), async (req, res) => {
@@ -58,9 +57,22 @@ router.get('/', async (req, res) => {
   }
 });
 
-//
+// GET /api/employees/:id - Get employee by ID
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const employee = await Employee.findById(id); // Assuming MongoDB with Mongoose
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+    res.json(employee);
+  } catch (error) {
+    console.error('Error fetching employee:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // PUT /api/employees/:id - Update employee
-// PUT /api/employees/:id
 router.put('/:id', upload.single('image'), async (req, res) => {
   try {
     const employeeId = req.params.id;
@@ -77,19 +89,22 @@ router.put('/:id', upload.single('image'), async (req, res) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
+    // Prepare update object
+    const updatedData = {
+      name: name || employee.name,
+      email: email || employee.email,
+      mobile: mobile || employee.mobile,
+      designation: designation || employee.designation,
+      gender: gender || employee.gender,
+      courses: courses || employee.courses,
+      image: req.file ? req.file.path : employee.image, // Update image if a new one is uploaded
+      createdAt: employee.createdAt // Keep the original createdAt
+    };
+
     // Update employee
     const updatedEmployee = await Employee.findByIdAndUpdate(
       employeeId,
-      {
-        name,
-        email,
-        mobile,
-        designation,
-        gender,
-        courses,
-        image: req.file ? req.file.path : employee.image, // Update image if a new one is uploaded
-        createdAt: employee.createdAt // Keep the original createdAt
-      },
+      updatedData,
       { new: true, runValidators: true } // Return the updated document
     );
 
@@ -100,7 +115,6 @@ router.put('/:id', upload.single('image'), async (req, res) => {
   }
 });
 
-//
 // DELETE /api/employees/:id - Delete employee
 router.delete('/:id', async (req, res) => {
   try {
@@ -115,6 +129,5 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete employee' });
   }
 });
-
 
 module.exports = router;
